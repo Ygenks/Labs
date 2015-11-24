@@ -1,171 +1,183 @@
 #include <iostream>
+#include <string>
 
 using namespace std;
 
+template <class T>
 struct Node
 {
-    int value;
-    Node* left,*right;
-
-    Node():value(0),left(NULL),right(NULL)
+    T data;
+    Node *left, *right, *father;
+    Node():data(0),left(NULL),right(NULL), father(NULL)
     {}
-    Node(int num):value(num), left(NULL),right(NULL)
+    Node(T value):data(value), left(NULL),right(NULL),father(NULL)
     {}
     ~Node()
-    {
-        delete left;
-        delete right;
-    }
-    int get_value()
-    {
-        return value;
-    }
-    Node* get_left()
-    {
-        return left;
-    }
-    Node* get_right()
-    {
-        return right;
-    }
+    {}
 };
 
+template <class T>
 class Tree
 {
     private:
-        Node* Tree_Node;
-        void add(int num, Node** root);
-        void print(Node* Tree_Node);
-        Node* search(int key, Node* node);
-        void delete_Node(int num, Node **node);
+        Node<T>* Tree_Node;
+        void add(T value, Node<T>** root, Node<T>* parent);
+        void print(Node<T>* Tree_Node);
+        Node<T>* search(T key, Node<T>* node);
+        void deconstruction(Node<T>** node);
     public:
         Tree():Tree_Node(NULL)
         {}
-        /*~Tree(): ~Node()
+        ~Tree()
         {
-            delete Tree_Node;
-        }*/
-        int get_value()
-        {
-            return Tree_Node->get_value();
+            deconstruction();
         }
-        void add(int num);
-        Node* search(int key);
-        void delete_Node(int key);
+        void add(T value);
+        Node<T>* search(T key);
+        void delete_Node(T key);
         void print();
+        void deconstruction();
 };
 
-void Tree:: add(int num)
+template<class T>
+void Tree<T>:: add(T value)
 {
-   add(num, &Tree_Node);
+   add(value, &Tree_Node, NULL);
    return;
 }
 
-void Tree :: add(int num, Node** root)
+template <class T>
+void Tree<T> :: add(T value, Node<T>** root, Node<T>* parent)
 {
     if(NULL == *root)
     {
-        *root = new Node(num);
+        *root = new Node<T>(value);
+        (*root)->father = parent;
         return;
     }
-    if(num <=(*root)->value)
-        add(num, &(*root)->left);
-    if(num > (*root)->value)
-        add(num, &(*root)->right);
+    parent = *root;
+    if(value <=(*root)->data)
+        add(value, &(*root)->left, parent);
+    if(value > (*root)->data)
+        add(value, &(*root)->right, parent);
 
 }
 
-void Tree :: print()
+template <class T>
+void Tree<T> :: deconstruction()
+{
+    deconstruction(&Tree_Node);
+}
+
+template <class T>
+void Tree<T> :: deconstruction(Node<T>** node)
+{
+    if(NULL != *node)
+    {
+        deconstruction(&(*node)->left);
+        delete *node;
+        deconstruction(&(*node)->right);
+    }
+}
+
+template <class T>
+void Tree<T> :: print()
 {
     print(Tree_Node);
 }
 
-void Tree :: print(Node* node)
+template <class T>
+void Tree<T> :: print(Node<T>* node)
 {
     if(NULL != node)
     {
         print(node->left);
-        cout << node->value << ' ';
+        cout << node->data << ' ';
         print(node->right);
     }
     return;
 }
 
-Node* Tree :: search(int key)
+template <class T>
+Node<T>* Tree<T> :: search(T key)
 {
-    search(key, Tree_Node);
+    return search(key, Tree_Node);
 }
 
-Node* Tree :: search(int key, Node* node)
+template <class T>
+Node<T>* Tree<T> :: search(T key, Node<T>* node)
 {
     if (NULL != node)
     {
-        if (key < node->value && NULL != node->left)
-            search(key, node->left);
-        if (key > node->value && NULL != node->right)
-            search(key, node->right);
-        if (key == node->value)
-            return node;
+
+        if (key < node->data && NULL != node->left)
+           return search(key, node->left);
+        if (key > node->data && NULL != node->right)
+           return search(key, node->right);
+        if (key == node->data)
+           return node;
     }
-    else
-        return NULL;
+    return NULL;
 }
 
-void Tree :: delete_Node(int key)
-{
-    delete_Node(key, &Tree_Node);
-}
 
-void Tree :: delete_Node(int key, Node **node)
+template <class T>
+void Tree<T> :: delete_Node(T key)
 {
-    Node *l, *r;
+    Node<T>* del = search(key);
 
-    if (NULL == *node)
+    if(NULL == del)
         return;
-
-    if (key < (*node)->value)
-        delete_Node(key, &(*node)->left);
-    else if (key > (*node)->value )
-        delete_Node(key, &(*node)->right);
-    else
+    if(NULL == del->left && NULL == del->right)
     {
-        l = (*node)->left;
-        r = (*node)->right;
+        if(NULL == del->father->left)
+           del->father->left = NULL;
+        if(NULL == del->father->right)
+           del->father->right = NULL;
+        delete del;
+    }else
+    {
+        Node<T>* replace = NULL;
 
-        delete *node;
-        *node = r;
-
-        while (NULL != *node)
-            node = &(*node)->left;
-        *node = l;
+        if(NULL != del->right)
+        {
+            replace = del->right;
+            while(NULL != replace->left)
+                replace = replace->left;
+            if(del == del->father->left)
+            {
+                del->father->left = del->right;
+                replace->left = del->left;
+                del->left->father = replace;
+            }
+            else
+            {
+                del->father->right = del->right;
+                replace->left = del->left;
+                del->left->father = replace;
+            }
+            delete del;
+        }
+        else
+        {
+            if(del == del->father->right)
+            {
+                del->father->right = del->left;
+                del->left->father = del->father;
+            }
+            else
+            {
+                del->father->left = del->left;
+                del->left->father = del->father;
+            }
+            delete del;
+        }
+        return;
     }
 }
 
 int main()
 {
-    Tree t;
-    while(true)
-    {
-        int num = 0;
 
-        cout << "enter number:" << endl;
-        cin >> num;
-        t.add(num);
-        cout << "press q to break" << endl;
-        char ans = 0;
-        cin >> ans;
-        if('q' == ans && true == cin.good())
-        {
-            cin.ignore(100, '\n');
-            break;
-        }
-        cin.ignore(100, '\n');
-        cin.clear();
-    }
-    t.print();
-    Node *a = t.search(3);
-    cout << a->get_value();
-    /*t.delete_Node(3);
-    t.print();*/
     return 0;
 }
