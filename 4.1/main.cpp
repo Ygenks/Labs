@@ -1,183 +1,66 @@
-#include <iostream>
-#include <string>
-
-using namespace std;
-
-template <class T>
-struct Node
-{
-    T data;
-    Node *left, *right, *father;
-    Node():data(0),left(NULL),right(NULL), father(NULL)
-    {}
-    Node(T value):data(value), left(NULL),right(NULL),father(NULL)
-    {}
-    ~Node()
-    {}
-};
-
-template <class T>
-class Tree
-{
-    private:
-        Node<T>* Tree_Node;
-        void add(T value, Node<T>** root, Node<T>* parent);
-        void print(Node<T>* Tree_Node);
-        Node<T>* search(T key, Node<T>* node);
-        void deconstruction(Node<T>** node);
-    public:
-        Tree():Tree_Node(NULL)
-        {}
-        ~Tree()
-        {
-            deconstruction();
-        }
-        void add(T value);
-        Node<T>* search(T key);
-        void delete_Node(T key);
-        void print();
-        void deconstruction();
-};
-
-template<class T>
-void Tree<T>:: add(T value)
-{
-   add(value, &Tree_Node, NULL);
-   return;
-}
-
-template <class T>
-void Tree<T> :: add(T value, Node<T>** root, Node<T>* parent)
-{
-    if(NULL == *root)
-    {
-        *root = new Node<T>(value);
-        (*root)->father = parent;
-        return;
-    }
-    parent = *root;
-    if(value <=(*root)->data)
-        add(value, &(*root)->left, parent);
-    if(value > (*root)->data)
-        add(value, &(*root)->right, parent);
-
-}
-
-template <class T>
-void Tree<T> :: deconstruction()
-{
-    deconstruction(&Tree_Node);
-}
-
-template <class T>
-void Tree<T> :: deconstruction(Node<T>** node)
-{
-    if(NULL != *node)
-    {
-        deconstruction(&(*node)->left);
-        delete *node;
-        deconstruction(&(*node)->right);
-    }
-}
-
-template <class T>
-void Tree<T> :: print()
-{
-    print(Tree_Node);
-}
-
-template <class T>
-void Tree<T> :: print(Node<T>* node)
-{
-    if(NULL != node)
-    {
-        print(node->left);
-        cout << node->data << ' ';
-        print(node->right);
-    }
-    return;
-}
-
-template <class T>
-Node<T>* Tree<T> :: search(T key)
-{
-    return search(key, Tree_Node);
-}
-
-template <class T>
-Node<T>* Tree<T> :: search(T key, Node<T>* node)
-{
-    if (NULL != node)
-    {
-
-        if (key < node->data && NULL != node->left)
-           return search(key, node->left);
-        if (key > node->data && NULL != node->right)
-           return search(key, node->right);
-        if (key == node->data)
-           return node;
-    }
-    return NULL;
-}
-
-
-template <class T>
-void Tree<T> :: delete_Node(T key)
-{
-    Node<T>* del = search(key);
-
-    if(NULL == del)
-        return;
-    if(NULL == del->left && NULL == del->right)
-    {
-        if(NULL == del->father->left)
-           del->father->left = NULL;
-        if(NULL == del->father->right)
-           del->father->right = NULL;
-        delete del;
-    }else
-    {
-        Node<T>* replace = NULL;
-
-        if(NULL != del->right)
-        {
-            replace = del->right;
-            while(NULL != replace->left)
-                replace = replace->left;
-            if(del == del->father->left)
-            {
-                del->father->left = del->right;
-                replace->left = del->left;
-                del->left->father = replace;
-            }
-            else
-            {
-                del->father->right = del->right;
-                replace->left = del->left;
-                del->left->father = replace;
-            }
-            delete del;
-        }
-        else
-        {
-            if(del == del->father->right)
-            {
-                del->father->right = del->left;
-                del->left->father = del->father;
-            }
-            else
-            {
-                del->father->left = del->left;
-                del->left->father = del->father;
-            }
-            delete del;
-        }
-        return;
-    }
-}
-
+﻿#include <tree.h>
 int main()
 {
+    char option = '\0';
+    while(true)
+    {
 
+        system("clear");
+
+        Tree<char>* exp_tree;
+        if('\0' == option)
+            exp_tree = new Tree<char>;
+
+        cout << "Choose option:\n"
+                "1.Add expression\n"
+                "2.Evaluate expression\n"
+                "3.Clear tree\n"
+                "4.Press q to exit" << endl;
+        cin >> option;
+
+        switch(option)
+        {
+            case '1':
+            {
+                char* expression = NULL;
+                const int exp_size = 25;
+                expression = new char[exp_size];
+
+                system("clear");
+
+                cout << "Input expression using the parantheses(like (4+(5*4)) )" << endl;
+                cin >> expression;
+                exp_tree->math_parse(expression);
+
+                cin.ignore(100, '\n');
+
+                break;
+            }
+            case '2':
+            {
+                system("clear");
+
+                cout << "Result:" << exp_tree->evaluate() << endl << "Press ANIKEI to continue" << endl;
+                cin.ignore(100, '\n');
+                cin.get();
+
+                break;
+            }
+            case '3':
+            {
+                if(true == exp_tree->is_empty())
+                {
+                    cerr << "Tree is empty" << endl;
+                    break;
+                }
+                exp_tree->deconstruction();
+                break;
+            }
+            case 'q':
+                exit(0);
+            default:
+                continue;
+        }
+    }
     return 0;
 }
