@@ -7,7 +7,7 @@ void Tree<T>:: add(T value)
    return;
 }
 
-template <class T>
+template <class T>`
 void Tree<T> :: add(T value, Node<T>** root, Node<T>* parent)
 {
     if(NULL == *root)
@@ -56,8 +56,8 @@ void Tree<T> :: deconstruction(Node<T>** node)
     if(NULL != *node)
     {
         deconstruction(&(*node)->left);
-        delete *node;
         deconstruction(&(*node)->right);
+        delete *node;
     }
 }
 
